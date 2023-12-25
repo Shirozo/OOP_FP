@@ -3,6 +3,9 @@ from PyQt5.QtWidgets import QApplication
 
 class Ui_MessageForm(object):
     def __init__(self, message : str, code : str) -> None:
+        """
+        Initialize the code and message
+        """
         self.message = message
         self.code = code
 
@@ -41,8 +44,12 @@ class Ui_MessageForm(object):
 
     def retranslateUi(self, MessageForm):
         _translate = QtCore.QCoreApplication.translate
+        #Set the window title to whatever the code is
         MessageForm.setWindowTitle(_translate("MessageForm", self.code))
+
+        #Set the the Label tezt to whatever the message is 
         self.Message.setText(_translate("MessageForm", self.message))
+        
         self.ExitMessage.setText(_translate("MessageForm", "Ok"))
 
 
