@@ -74,11 +74,25 @@ class Ui_ConfirmDialog(object):
         self.messageFedback(message, message_code)      #Show the message dialog
     
     def messageFedback(self, msg : str, code : str) -> None:
-        self.erorr = QtWidgets.QDialog()
-        erorr_modal = Ui_MessageForm(msg, code)
-        erorr_modal.setupUi(self.erorr)
-        self.ConfirmDialog.close()
-        self.erorr.exec_()
+        """
+        Display feedback message using a custom QDialog with Ui_MessageForm.
+
+        Parameters:
+        - msg (str): The message to be displayed.
+        - code (str): The code associated with the message.
+
+        Usage:
+        ```
+        instance_of_your_class.messageFedback("Operation successful.", "Success")
+        ```
+
+        This method creates a QDialog window with a custom UI form (Ui_MessageForm) to show a feedback message along with an associated code. The method takes two parameters, 'msg' and 'code', both of type str.
+        """
+        self.erorr = QtWidgets.QDialog()            #Create a QDialog instance
+        erorr_modal = Ui_MessageForm(msg, code)     #Create the Ui_MessageForm instance passisng the required parameter
+        erorr_modal.setupUi(self.erorr)             #Set up the UI passing the QDialog instance
+        self.ConfirmDialog.close()                  #Close ConfirmDialog window
+        self.erorr.exec_()                          #And show the Ui_MessageForm window
     
     def setupUi(self, ConfirmDialog):
         ConfirmDialog.setObjectName("ConfirmDialog")
