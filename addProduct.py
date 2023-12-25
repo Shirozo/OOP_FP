@@ -12,6 +12,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from Message import Ui_MessageForm
 from databaseConn import createConnection
 from signalConnection import SignalConnector
+from PyQt5.QtSql import QSqlQuery
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -161,11 +162,6 @@ class Ui_Dialog(object):
         ```
 
         This method creates a QDialog window with a custom UI form (Ui_MessageForm) to show an error message along with an associated error code. The method takes two parameters, 'message' and 'code', both of type str.
-
-        Example:
-        ```python
-        instance_of_your_class.showError("File not found.", "E404")
-        ```
         """
         self.error = QtWidgets.QDialog()            #Create a QDialog instance
         erorr_ui = Ui_MessageForm(message, code)    #Create a Ui_MessageForm object instance
@@ -189,11 +185,6 @@ class Ui_Dialog(object):
         - `QuantityField`: Resets the value to 1.
 
         This method also emits a custom signal named 'clickedOk'. This signal can be connected to perform specific actions when the 'OK' button is clicked.
-
-        Example:
-        ```python
-        instance_of_your_class.clear_input()
-        ```
         """
         self.CodeField.clear()          #Clear the code field
         self.NameField.clear()          #Clear the name field
@@ -202,50 +193,84 @@ class Ui_Dialog(object):
         self.signals.clickedOk.emit()   #This will send a signal to main.py to execute setUpTable and re-render the table data
     
     def AddProduct(self):
-        from PyQt5.QtSql import QSqlQuery
-        code = self.CodeField.text().strip()
-        name = self.NameField.text().strip()
-        price = float(self.PriceField.text())
-        quantity = int(self.QuantityField.text())
+        """
+        Add a new product to the database.
 
-        if not code or not name:
-            if not code:
-                message = "Product Code is Required!"
-            else:
-                message = "Product Name is Required!"
-            message_code = "Erorr"
-        else:
-            db = createConnection()
-            if not db:
-                message = "Database Close"
-                message_code = "Erorr"
-            try:
-                db.open()
-                query = QSqlQuery()
-                statement = "INSERT INTO products (code, name, price, quantity) VALUES (:code, :name, :price, :quantity)"
-                query.prepare(statement)
+        Usage:
+        ```
+        instance_of_your_class.AddProduct()
+        ```
+
+        This method retrieves product information from input fields, validates the input, and adds a new product to the database. The following steps are performed:
+
+        1. Retrieve values from input fields:
+        - `code`: Product code from the 'CodeField' input.
+        - `name`: Product name from the 'NameField' input.
+        - `price`: Product price from the 'PriceField' input (converted to float).
+        - `quantity`: Product quantity from the 'QuantityField' input (converted to int).
+
+        2. Validate the input:
+        - Ensure that both product code and name are provided. If not, display an error message.
+
+        3. Connect to the database:
+        - Create a database connection using the `createConnection` function.
+
+        4. Insert the new product into the 'products' table:
+        - Prepare an SQL statement for insertion.
+        - Bind values to the prepared statement.
+        - Execute the query.
+
+        5. Handle the result:
+        - If the query execution fails, display an error message with details.
+        - If successful, close the database connection, display a success message, and clear input fields.
+        """
+
+        code = self.CodeField.text().strip()        #Get the value of code field removing all the whitespace
+        name = self.NameField.text().strip()        #Get the value of name field removing all the whitespace
+        price = float(self.PriceField.text())       #Get the value of price field
+        quantity = int(self.QuantityField.text())   #Get the value of quantity field
+
+        if not code or not name:                        #If the code or name is empty, Then
+            if not code:                                    #If no code, Then
+                message = "Product Code is Required!"           #Set the message that the code is required
+            else:                                           #If the code exist, Then
+                message = "Product Name is Required!"           #Set the message that the name is required
+            message_code = "Erorr"                          #Set the message code to error
+        else:                                           #If name and code both exist, then
+            db = createConnection()                         #Create a database connection
+            if not db:                                      #If can't connect to database, then
+                message = "Database Close"                      #Set the message telling that the database is close
+                message_code = "Erorr"                          #Set the message code to error
+            try:                                        #Handle any error
+                db.open()                                   #Open database connection
+                query = QSqlQuery()                         #Create a QSqlQuery object instance
+                statement = """INSERT INTO products (       
+                    code, name, price, quantity) 
+                    VALUES (:code, :name, :price, :quantity)
+                """                                         #Set your SQL query
+                query.prepare(statement)                    #Prepare the SQL query for value binding
                 
-                query.bindValue(":code", code)
-                query.bindValue(":name", name)
-                query.bindValue(":price", price)
-                query.bindValue(":quantity", quantity)
+                query.bindValue(":code", code)              #Bind the code value to SQL statement
+                query.bindValue(":name", name)              #Bind the name value to SQL statement
+                query.bindValue(":price", price)            #Bind the price value to SQL statement
+                query.bindValue(":quantity", quantity)      #Bind the quantity value to SQL statement
 
-                status = query.exec_()
-                if not status:
-                    erorr = query.lastError().text()
-                    message = f"{erorr[:14]}...."
-                    message_code = "Erorr"
-                else:
-                    db.close()
-                    message = "Product Added"
-                    message_code = "Success"
-                    self.clear_input()
-            except Exception as e:
-                message = e
-                message_code = "Erorr"
-                db.close()
+                status = query.exec_()                      #Execute the query
+                if not status:                              #If the query fails, then
+                    erorr = query.lastError().text()            #Extract the error
+                    message = f"{erorr[:14]}...."               #Set the message to the 14 character of error
+                    message_code = "Error"                      #Set the code to Error 
+                else:                                       #If the query succedd, then
+                    db.close()                                  #Close the connectiom to the database
+                    message = "Product Added"                   #Message the user that the product is added
+                    message_code = "Success"                    #Set the message code to Success
+                    self.clear_input()                          #Clear all the fields
+            except Exception as e:                      #If an error happens, then
+                message = f"{e[:14]}..."                    #Set tht message to whatever the error is                               
+                message_code = "Erorr"                      #Set the message code to error
+                db.close()                                   #Close the connectiom to the database
 
-        self.showError(message, message_code)
+        self.showError(message, message_code)           #Show message Dialog
 
 
 if __name__ == "__main__":
