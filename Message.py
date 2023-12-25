@@ -1,6 +1,5 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QApplication
-import platform
 
 class Ui_MessageForm(object):
     def __init__(self, message : str, code : str) -> None:
@@ -36,7 +35,7 @@ class Ui_MessageForm(object):
         self.horizontalLayout.addWidget(self.MessageWidget)
         
         self.retranslateUi(MessageForm)
-        self.ExitMessage.clicked.connect(MessageForm.reject)
+        self.ExitMessage.clicked.connect(MessageForm.close)
         QtCore.QMetaObject.connectSlotsByName(MessageForm)
         
 
