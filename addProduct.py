@@ -11,6 +11,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from Message import Ui_MessageForm
 from databaseConn import createConnection
+from signalConnection import SignalConnector
 
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
@@ -129,8 +130,11 @@ class Ui_Dialog(object):
 
         self.retranslateUi(Dialog)
         self.FormAddButton.clicked.connect(self.AddProduct)
-        self.FormCancelButton.clicked.connect(Dialog.reject)
+        self.FormCancelButton.clicked.connect(Dialog.close)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
+
+        self.signals = SignalConnector()
+        
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
@@ -154,6 +158,7 @@ class Ui_Dialog(object):
         self.NameField.clear()
         self.PriceField.setValue(0.0)
         self.QuantityField.setValue(1)
+        self.signals.clickedOk.emit()
     
     def AddProduct(self):
         from PyQt5.QtSql import QSqlQuery
@@ -171,7 +176,8 @@ class Ui_Dialog(object):
         else:
             db = createConnection()
             if not db:
-                return
+                message = "Database Close"
+                message_code = "Erorr"
             try:
                 db.open()
                 query = QSqlQuery()
@@ -185,7 +191,9 @@ class Ui_Dialog(object):
 
                 status = query.exec_()
                 if not status:
-                    message = "Product with that Code Already Exist!"
+                    erorr = query.lastError().text()
+                    message = f"{erorr[:14]}...."
+                    message_code = "Erorr"
                 else:
                     db.close()
                     message = "Product Added"
@@ -193,6 +201,7 @@ class Ui_Dialog(object):
                     self.clear_input()
             except Exception as e:
                 message = e
+                message_code = "Erorr"
                 db.close()
 
         self.showError(message, message_code)
