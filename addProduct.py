@@ -261,15 +261,14 @@ class Ui_Dialog(object):
                     message = f"{erorr[:14]}...."               #Set the message to the 14 character of error
                     message_code = "Error"                      #Set the code to Error 
                 else:                                       #If the query succedd, then
-                    db.close()                                  #Close the connectiom to the database
                     message = "Product Added"                   #Message the user that the product is added
                     message_code = "Success"                    #Set the message code to Success
                     self.clear_input()                          #Clear all the fields
             except Exception as e:                      #If an error happens, then
                 message = f"{e[:14]}..."                    #Set tht message to whatever the error is                               
                 message_code = "Erorr"                      #Set the message code to error
-                db.close()                                   #Close the connectiom to the database
 
+        db.close()                                   #Close the connectiom to the database
         self.showError(message, message_code)           #Show message Dialog
 
 
