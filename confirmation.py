@@ -17,41 +17,61 @@ from signalConnection import SignalConnector
 
 class Ui_ConfirmDialog(object):
     def removeEntry(self, id : int) -> None:
-        message_code = "Error"
-        message = "An Error Occured"
-        try:
-            db = createConnection()
-            db.open()
-            query = QSqlQuery()
-            checker = QSqlQuery()
+        """
+        Remove a product entry from the database based on its ID.
 
-            checker_statement = "SELECT COUNT(*) FROM products WHERE id = :id"
-            checker.prepare(checker_statement)
-            checker.bindValue(":id", id)
-            checker_status = checker.exec_()
+        Parameters:
+        - id (int): The ID of the product entry to be removed.
 
-            if checker_status:
-                checker.next()
-                count = checker.value(0)
-                if count == 1:
-                    statement = "DELETE FROM products WHERE id = :id"
-                    query.prepare(statement)
-                    query.bindValue(":id", id)
-                    status = query.exec_()
+        Usage:
+        ```
+        instance_of_your_class.removeEntry(123)
+        ```
+
+        This method attempts to remove a product entry from the 'products' table in the database based on the provided ID.
+
+        Parameters:
+        - `id`: The ID of the product entry to be removed.
+
+        If the entry with the given ID exists, it is deleted. If not, an appropriate message is set.
+        """
+        message_code = "Error"              #Set the default message code
+        message = "An Error Occured"        #Set the default message
+        try:                                #Handle any runtime error
+            db = createConnection()            #Create database connection 
+            db.open()                           #Open the database connection
+            query = QSqlQuery()                 #Create QSqlQuery instance to query removal
+            checker = QSqlQuery()               #Create QSqlQuery instance for checking the product exist 
+
+            checker_statement = """SELECT COUNT(*) 
+            FROM products WHERE id = :id"""         #SQL statement to checker query
+            checker.prepare(checker_statement)      #Prepare the statement for value binding
+            checker.bindValue(":id", id)            #Bind the ID to the SQL statement
+            checker_status = checker.exec_()        #Execute the Query
+
+            if checker_status:                      #If the query succedd, then
+                checker.next()                          #Move to the next row
+                count = checker.value(0)                #Get the count of the product with that id
+                if count == 1:                              #If the count is only 1, then
+                    statement = """DELETE FROM products     
+                    WHERE id = :id"""                           #SQL statement for deleting the value
+                    query.prepare(statement)                    #Prepare the query for value binding
+                    query.bindValue(":id", id)                  #Bind the ID
+                    status = query.exec_()                      #Execute the query
                     
-                    if status:
-                        message = "Deleted Successfully!"
-                        message_code = "Success"
-                        self.signal.clickedOk.emit()
-                else:
-                    message = "Data Don't Exist"
-            else:
-                message = "Data Don't Exist"
-        except Exception as e:
-            message = str(e)[:13] + "..."
+                    if status:                                  #If the query succeed ,then
+                        message = "Deleted Successfully!"           #Set the message that the data is removed
+                        message_code = "Success"                    #Set the code to  Success
+                        self.signal.clickedOk.emit()                #Singal the main.py to call removeTableEntry function    
+                else:                                       #If the count is not equal to 1, then
+                    message = "Data Don't Exist"                #Set the message to Data Don't Exist
+            else:                                   #If the checker query failed
+                message = "Data Don't Exist"            #Set the message to Data Don't Exist
+        except Exception as e:              #Get the error messsage
+            message = str(e)[:13] + "..."       #Set the meesage to whatever the error message is
 
-        db.close()
-        self.messageFedback(message, message_code)
+        db.close()  #Close the database connection
+        self.messageFedback(message, message_code)      #Show the message dialog
     
     def messageFedback(self, msg : str, code : str) -> None:
         self.erorr = QtWidgets.QDialog()
@@ -92,7 +112,6 @@ class Ui_ConfirmDialog(object):
 
         self.retranslateUi(ConfirmDialog)
         self.ConfirmNoButton.clicked.connect(ConfirmDialog.close)
-        # self.ConfirmYesButton.clicked.connect(self.removeEntry)
         QtCore.QMetaObject.connectSlotsByName(ConfirmDialog)
         self.ConfirmDialog = ConfirmDialog
 
@@ -111,7 +130,7 @@ if __name__ == "__main__":
     import sys
     app = QtWidgets.QApplication(sys.argv)
     ConfirmDialog = QtWidgets.QDialog()
-    ui = Ui_ConfirmDialog(1)
+    ui = Ui_ConfirmDialog()
     ui.setupUi(ConfirmDialog)
     ConfirmDialog.show()
     sys.exit(app.exec_())
