@@ -11,15 +11,84 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from addProduct import Ui_Dialog
 from PyQt5.QtSql import *
+from confirmation import Ui_ConfirmDialog
 from databaseConn import createConnection
+from functools import partial
 
 class Ui_MainWindow(object):
+    def __init__(self) -> None:
+        self.id_to_row = {}
+
     def showAddWidget(self):
         self.add_form = QtWidgets.QDialog()
         add_form_ui = Ui_Dialog()
         add_form_ui.setupUi(self.add_form)
+        add_form_ui.signals.clickedOk.connect(self.setUpTable)
         add_form_ui.FormAddButton.clicked.connect(lambda: add_form_ui.AddProduct)
         self.add_form.exec_()
+    
+    def handleUpdater(self):
+        print("Hello world")
+ 
+    def removeTableEntry(self, id : int) -> None:
+        found = False
+        for i in list(self.id_to_row.keys()):
+            if i == id:
+                row = self.id_to_row[i]
+                print(row)
+                self.tableWidget.removeRow(row)
+                del self.id_to_row[i]
+                found = True
+                continue
+            if found:
+                self.id_to_row[i] = int(self.id_to_row[i]) - 1
+
+    def showHandleRemove(self, id_rem : int) -> None:
+        self.remover_form = QtWidgets.QDialog()
+        remover_form_ui = Ui_ConfirmDialog()
+        remover_form_ui.setupUi(self.remover_form)
+        remover_form_ui.signal.clickedOk.connect(lambda:self.removeTableEntry(id_rem))
+        remover_form_ui.ConfirmYesButton.clicked.connect(partial(remover_form_ui.removeEntry, id_rem))
+        self.remover_form.exec_()
+        
+    
+    def setUpTable(self) -> None:
+        self.id_to_row = {}
+        db = createConnection()
+        db.open()
+        query = QSqlQuery("SELECT * FROM products ORDER BY code")
+        number_of_column = query.record().count()
+        row = 0
+        while query.next():
+            current_count = self.tableWidget.rowCount()
+            if row >=  current_count:
+                self.tableWidget.insertRow(row)
+            current_id = query.value(0)
+            for col in range(1, number_of_column):
+                item = QtWidgets.QTableWidgetItem(str(query.value(col)))
+                item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
+                self.tableWidget.setItem(row, col-1, item)
+
+            self.id_to_row[current_id] = row
+            
+            widget = QtWidgets.QWidget()
+            button_layout = QtWidgets.QHBoxLayout(widget)
+
+            button = QtWidgets.QPushButton("Delete")
+            button.setMaximumSize(88, 16777215)
+            button.clicked.connect(partial(self.showHandleRemove, current_id))
+            button_layout.addWidget(button)
+
+            button2 = QtWidgets.QPushButton("Update")
+            button2.setMaximumSize(88, 16777215)
+            button2.clicked.connect(self.handleUpdater)
+            button_layout.addWidget(button2)
+
+            self.tableWidget.setCellWidget(row, col, widget )
+            self.tableWidget.setRowHeight(row, 40)
+
+            row += 1
+        db.close()
     
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -56,26 +125,16 @@ class Ui_MainWindow(object):
         self.widget_2.setObjectName("widget_2")
         self.verticalLayout = QtWidgets.QVBoxLayout(self.widget_2)
         self.verticalLayout.setObjectName("verticalLayout")
-        self.pushButton = QtWidgets.QPushButton(self.widget_2)
-        self.pushButton.setMinimumSize(QtCore.QSize(50, 34))
-        self.pushButton.setObjectName("pushButton")
-        self.verticalLayout.addWidget(self.pushButton, 0, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
         self.verticalLayout_2.addWidget(self.widget_2)
         self.widget_3 = QtWidgets.QWidget(self.centralwidget)
         self.widget_3.setObjectName("widget_3")
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout(self.widget_3)
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.label_2 = QtWidgets.QLabel(self.widget_3)
-        self.label_2.setObjectName("label_2")
-        self.horizontalLayout_2.addWidget(self.label_2)
-        self.comboBox = QtWidgets.QComboBox(self.widget_3)
-        self.comboBox.setObjectName("comboBox")
-        self.comboBox.addItem("")
-        self.comboBox.addItem("")
-        self.comboBox.addItem("")
-        self.comboBox.addItem("")
-        self.horizontalLayout_2.addWidget(self.comboBox)
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.pushButton = QtWidgets.QPushButton(self.widget_2)
+        self.pushButton.setMinimumSize(QtCore.QSize(50, 34))
+        self.pushButton.setObjectName("pushButton")
+        self.horizontalLayout_2.addWidget(self.pushButton)
         self.horizontalLayout_2.addItem(spacerItem)
         self.label_3 = QtWidgets.QLabel(self.widget_3)
         self.label_3.setObjectName("label_3")
@@ -136,19 +195,17 @@ class Ui_MainWindow(object):
         self.retranslateUi(MainWindow)
         self.pushButton.clicked.connect(self.showAddWidget) # type: ignore
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
+        self.setUpTable()
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.label.setText(_translate("MainWindow", "asdasd"))
         self.pushButton.setText(_translate("MainWindow", "Add"))
-        self.label_2.setText(_translate("MainWindow", "Show"))
-        self.comboBox.setItemText(0, _translate("MainWindow", "10"))
-        self.comboBox.setItemText(1, _translate("MainWindow", "25"))
-        self.comboBox.setItemText(2, _translate("MainWindow", "50"))
-        self.comboBox.setItemText(3, _translate("MainWindow", "100"))
         self.label_3.setText(_translate("MainWindow", "Search"))
         self.tableWidget.setSortingEnabled(True)
+        header = self.tableWidget.horizontalHeader()
+        header.setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         item = self.tableWidget.verticalHeaderItem(0)
         item.setText(_translate("MainWindow", "1"))
         item = self.tableWidget.horizontalHeaderItem(0)
@@ -163,25 +220,6 @@ class Ui_MainWindow(object):
         item.setText(_translate("MainWindow", "Action"))
         __sortingEnabled = self.tableWidget.isSortingEnabled()
         self.tableWidget.setSortingEnabled(False)
-
-        db = createConnection()
-        db.open()
-        query = QSqlQuery("SELECT * FROM products")
-        number_of_column = query.record().count()
-        row = 0
-        while query.next():
-            current_count = self.tableWidget.rowCount()
-            if row >=  current_count:
-                self.tableWidget.insertRow(row)
-            for col in range(1, number_of_column):
-                item = QtWidgets.QTableWidgetItem(str(query.value(col)))
-                self.tableWidget.setItem(row, col-1, item)
-            row += 1
-        db.close()
-
-        header = self.tableWidget.horizontalHeader()
-        header.setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-        
         self.tableWidget.setSortingEnabled(__sortingEnabled)
 
 
