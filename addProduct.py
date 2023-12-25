@@ -147,11 +147,32 @@ class Ui_Dialog(object):
         self.FormCancelButton.setText(_translate("Dialog", "Cancel"))
         self.FormAddButton.setText(_translate("Dialog", "Add"))
 
-    def showError(self, message : str, code : str):
-        self.error = QtWidgets.QDialog()
-        erorr_ui = Ui_MessageForm(message, code)
-        erorr_ui.setupUi(self.error)
-        self.error.exec_()
+    def showError(self, message : str, code : str) -> None:
+        """
+        Display an error message using a custom QDialog with Ui_MessageForm.
+
+        Parameters:
+        - message (str): The error message to be displayed.
+        - code (str): The error code associated with the message.
+
+        Usage:
+        ```
+        instance_of_your_class.showError("This is an error message.", "E001")
+        ```
+
+        This method creates a QDialog window with a custom UI form (Ui_MessageForm) to show an error message along with an associated error code. The method takes two parameters, 'message' and 'code', both of type str.
+
+        Example:
+        ```python
+        instance_of_your_class.showError("File not found.", "E404")
+        ```
+        Note: Ensure that the Ui_MessageForm class is properly defined and imported before using this method.
+
+        """
+        self.error = QtWidgets.QDialog()            #Create a QDialog instance
+        erorr_ui = Ui_MessageForm(message, code)    #Create a Ui_MessageForm object instance
+        erorr_ui.setupUi(self.error)                #Call the setupUi passing the QDialog instance to create the UI
+        self.error.exec_()                          #Run the QDialog window
     
     def clear_input(self):
         self.CodeField.clear()
