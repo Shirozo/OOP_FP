@@ -156,7 +156,7 @@ class Ui_Dialog(object):
         - code (str): The error code associated with the message.
 
         Usage:
-        ```
+        ```python
         instance_of_your_class.showError("This is an error message.", "E001")
         ```
 
@@ -166,20 +166,40 @@ class Ui_Dialog(object):
         ```python
         instance_of_your_class.showError("File not found.", "E404")
         ```
-        Note: Ensure that the Ui_MessageForm class is properly defined and imported before using this method.
-
         """
         self.error = QtWidgets.QDialog()            #Create a QDialog instance
         erorr_ui = Ui_MessageForm(message, code)    #Create a Ui_MessageForm object instance
         erorr_ui.setupUi(self.error)                #Call the setupUi passing the QDialog instance to create the UI
         self.error.exec_()                          #Run the QDialog window
     
-    def clear_input(self):
-        self.CodeField.clear()
-        self.NameField.clear()
-        self.PriceField.setValue(0.0)
-        self.QuantityField.setValue(1)
-        self.signals.clickedOk.emit()
+    def clear_input(self) -> None:
+        """
+        Clear input fields and emit a signal indicating that the 'OK' button has been clicked.
+
+        Usage:
+        ```python
+        instance_of_your_class.clear_input()
+        ```
+
+        This method clears the input fields in a user interface, typically used for resetting or clearing form fields. The following fields are affected:
+
+        - `CodeField`: Clears any text entered in the code field.
+        - `NameField`: Clears any text entered in the name field.
+        - `PriceField`: Resets the value to 0.0.
+        - `QuantityField`: Resets the value to 1.
+
+        This method also emits a custom signal named 'clickedOk'. This signal can be connected to perform specific actions when the 'OK' button is clicked.
+
+        Example:
+        ```python
+        instance_of_your_class.clear_input()
+        ```
+        """
+        self.CodeField.clear()          #Clear the code field
+        self.NameField.clear()          #Clear the name field
+        self.PriceField.setValue(0.0)   #Reset the value of price field to 0
+        self.QuantityField.setValue(1)  #Reset the value of quantity field to 1
+        self.signals.clickedOk.emit()   #This will send a signal to main.py to execute setUpTable and re-render the table data
     
     def AddProduct(self):
         from PyQt5.QtSql import QSqlQuery
