@@ -14,10 +14,12 @@ from databaseConn import createConnection
 from signalConnection import SignalConnector
 from PyQt5.QtSql import QSqlQuery
 
+
 class Ui_Dialog(object):
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
-        Dialog.setFixedSize(615, 600)
+        Dialog.resize(615, 650)
+        Dialog.setMaximumSize(QtCore.QSize(615, 1000))
         self.verticalLayout = QtWidgets.QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.AddFormTitleContainer = QtWidgets.QWidget(Dialog)
@@ -67,24 +69,6 @@ class Ui_Dialog(object):
         spacerItem1 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_3.addItem(spacerItem1)
         self.verticalLayout.addWidget(self.FormNameContainer)
-        self.FromQuantityContainer = QtWidgets.QWidget(Dialog)
-        self.FromQuantityContainer.setObjectName("FromQuantityContainer")
-        self.horizontalLayout_5 = QtWidgets.QHBoxLayout(self.FromQuantityContainer)
-        self.horizontalLayout_5.setObjectName("horizontalLayout_5")
-        self.QuantityTitle = QtWidgets.QLabel(self.FromQuantityContainer)
-        self.QuantityTitle.setMinimumSize(QtCore.QSize(80, 0))
-        self.QuantityTitle.setObjectName("QuantityTitle")
-        self.horizontalLayout_5.addWidget(self.QuantityTitle)
-        self.QuantityField = QtWidgets.QSpinBox(self.FromQuantityContainer)
-        self.QuantityField.setMinimumSize(QtCore.QSize(150, 0))
-        self.QuantityField.setMaximumSize(QtCore.QSize(150, 16777215))
-        self.QuantityField.setMinimum(1)
-        self.QuantityField.setMaximum(2147483647)
-        self.QuantityField.setObjectName("QuantityField")
-        self.horizontalLayout_5.addWidget(self.QuantityField, 0, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
-        spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_3.addItem(spacerItem1)
-        self.verticalLayout.addWidget(self.FormNameContainer)
         self.descriptionwidget = QtWidgets.QWidget(Dialog)
         self.descriptionwidget.setObjectName("descriptionwidget")
         self.horizontalLayout_8 = QtWidgets.QHBoxLayout(self.descriptionwidget)
@@ -109,10 +93,30 @@ class Ui_Dialog(object):
         self.UploadImage = QtWidgets.QPushButton(self.ImageWidget)
         self.UploadImage.setObjectName("UploadImage")
         self.horizontalLayout_9.addWidget(self.UploadImage)
+        self.ImageName = QtWidgets.QLabel(self.ImageWidget)
+        self.ImageName.setMinimumSize(QtCore.QSize(200, 0))
+        self.ImageName.setObjectName("ImageName")
+        self.horizontalLayout_9.addWidget(self.ImageName)
         spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_9.addItem(spacerItem2)
         self.verticalLayout.addWidget(self.ImageWidget)
-        self.horizontalLayout_5.addItem(spacerItem2)
+        self.FromQuantityContainer = QtWidgets.QWidget(Dialog)
+        self.FromQuantityContainer.setObjectName("FromQuantityContainer")
+        self.horizontalLayout_5 = QtWidgets.QHBoxLayout(self.FromQuantityContainer)
+        self.horizontalLayout_5.setObjectName("horizontalLayout_5")
+        self.QuantityTitle = QtWidgets.QLabel(self.FromQuantityContainer)
+        self.QuantityTitle.setMinimumSize(QtCore.QSize(80, 0))
+        self.QuantityTitle.setObjectName("QuantityTitle")
+        self.horizontalLayout_5.addWidget(self.QuantityTitle)
+        self.QuantityField = QtWidgets.QSpinBox(self.FromQuantityContainer)
+        self.QuantityField.setMinimumSize(QtCore.QSize(150, 0))
+        self.QuantityField.setMaximumSize(QtCore.QSize(150, 16777215))
+        self.QuantityField.setMinimum(1)
+        self.QuantityField.setMaximum(2147483647)
+        self.QuantityField.setObjectName("QuantityField")
+        self.horizontalLayout_5.addWidget(self.QuantityField, 0, QtCore.Qt.AlignLeft|QtCore.Qt.AlignVCenter)
+        spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_5.addItem(spacerItem3)
         self.verticalLayout.addWidget(self.FromQuantityContainer)
         self.FormPriceContainer = QtWidgets.QWidget(Dialog)
         self.FormPriceContainer.setObjectName("FormPriceContainer")
@@ -128,8 +132,8 @@ class Ui_Dialog(object):
         self.PriceField.setMaximum(2147483648.0)
         self.PriceField.setObjectName("PriceField")
         self.horizontalLayout_4.addWidget(self.PriceField)
-        spacerItem3 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
-        self.horizontalLayout_4.addItem(spacerItem3)
+        spacerItem4 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
+        self.horizontalLayout_4.addItem(spacerItem4)
         self.verticalLayout.addWidget(self.FormPriceContainer)
         self.AddFormEndLine = QtWidgets.QFrame(Dialog)
         self.AddFormEndLine.setFrameShape(QtWidgets.QFrame.HLine)
@@ -164,7 +168,6 @@ class Ui_Dialog(object):
         QtCore.QMetaObject.connectSlotsByName(Dialog)
 
         self.signals = SignalConnector()
-        
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
@@ -175,6 +178,7 @@ class Ui_Dialog(object):
         self.descriptionLabel.setText(_translate("Dialog", "Description:"))
         self.ImageLabel.setText(_translate("Dialog", "Image:"))
         self.UploadImage.setText(_translate("Dialog", "Upload Image"))
+        self.ImageName.setText(_translate("Dialog", "TextLabel"))
         self.QuantityTitle.setText(_translate("Dialog", "Quantity: "))
         self.PriceTitle.setText(_translate("Dialog", "Price: "))
         self.FormCancelButton.setText(_translate("Dialog", "Cancel"))
@@ -198,8 +202,8 @@ class Ui_Dialog(object):
         self.error = QtWidgets.QDialog()            #Create a QDialog instance
         erorr_ui = Ui_MessageForm(message, code)    #Create a Ui_MessageForm object instance
         erorr_ui.setupUi(self.error)                #Call the setupUi passing the QDialog instance to create the UI
-        self.error.exec_()                          #Run the QDialog window
-    
+        self.error.exec_()  
+
     def clear_input(self) -> None:
         """
         Clear input fields and emit a signal indicating that the 'OK' button has been clicked.
@@ -223,7 +227,7 @@ class Ui_Dialog(object):
         self.PriceField.setValue(0.0)   #Reset the value of price field to 0
         self.QuantityField.setValue(1)  #Reset the value of quantity field to 1
         self.signals.clickedOk.emit()   #This will send a signal to main.py to execute setUpTable and re-render the table data
-    
+
     def AddProduct(self):
         """
         Add a new product to the database.

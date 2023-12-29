@@ -10,10 +10,11 @@
 
 from PyQt5 import QtCore, QtGui, QtWidgets
 from addProduct import Ui_Dialog
-from PyQt5.QtSql import *
+from PyQt5.QtSql import QSqlQuery
 from confirmation import Ui_ConfirmDialog
 from databaseConn import createConnection
 from functools import partial
+import sys
 
 class Ui_MainWindow(object):
     def __init__(self) -> None:
@@ -24,7 +25,7 @@ class Ui_MainWindow(object):
         add_form_ui = Ui_Dialog()
         add_form_ui.setupUi(self.add_form)
         add_form_ui.signals.clickedOk.connect(self.setUpTable)
-        add_form_ui.FormAddButton.clicked.connect(lambda: add_form_ui.AddProduct)
+        add_form_ui.FormAddButton.clicked.connect(lambda: add_form_ui.AddProduct())
         self.add_form.exec_()
     
     def handleUpdater(self):
