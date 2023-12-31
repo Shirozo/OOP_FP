@@ -50,6 +50,38 @@
            </spacer>
           </item>
           <item>
+           <widget class="QPushButton" name="manageButton">
+            <property name="cursor">
+             <cursorShape>PointingHandCursor</cursorShape>
+            </property>
+            <property name="styleSheet">
+             <string notr="true">QPushButton {
+	background-color: rgba(0,0,0,0);
+	border:rgba(0,0,0,0);
+}
+QPushButton:hover {
+	color:blue;
+}</string>
+            </property>
+            <property name="text">
+             <string>Manage</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="Line" name="Manageline">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>10</height>
+             </size>
+            </property>
+            <property name="orientation">
+             <enum>Qt::Vertical</enum>
+            </property>
+           </widget>
+          </item>
+          <item>
            <widget class="QPushButton" name="SignUpButton">
             <property name="cursor">
              <cursorShape>PointingHandCursor</cursorShape>
@@ -61,11 +93,7 @@
 }
 QPushButton:hover {
 	color:blue;
-}
-
-
-
-</string>
+}</string>
             </property>
             <property name="text">
              <string>Sign Up</string>

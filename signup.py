@@ -115,7 +115,7 @@ class Ui_Dialog(object):
                 self.signUpError(msg, code)
             else:
                 hashpass = generate_password_hash(password)
-                type = 1
+                type = 2
                 db = createConnection()
                 db.open()
                 query = QSqlQuery()
@@ -136,8 +136,6 @@ class Ui_Dialog(object):
                     self.signUpError(msg, code)
                 db.close()
 
-        
-    
 
     def signUpError(self, msg : str, code : str) -> None:
         self.sign_up_error_ui = QtWidgets.QDialog()

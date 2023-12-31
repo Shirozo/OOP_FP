@@ -106,6 +106,14 @@ class Ui_MainWindow(object):
                 row, not any(text.lower() in self.tableWidget.item(row, col).text().lower() for col in range(self.tableWidget.columnCount()-2))
             )
     
+    def getback(self) -> None:
+        import Home
+        self.back_ui = QtWidgets.QMainWindow()
+        back_ui = Home.Ui_MainWindow()
+        back_ui.setupUi(self.back_ui)
+        self.MainWindow.close()
+        self.back_ui.show()
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(787, 660)
@@ -117,6 +125,9 @@ class Ui_MainWindow(object):
         self.widget.setObjectName("widget")
         self.horizontalLayout = QtWidgets.QHBoxLayout(self.widget)
         self.horizontalLayout.setObjectName("horizontalLayout")
+        self.Backbutton = QtWidgets.QPushButton(self.widget)
+        self.Backbutton.setObjectName("Backbutton")
+        self.horizontalLayout.addWidget(self.Backbutton, 0, QtCore.Qt.AlignLeft)
         self.widget_7 = QtWidgets.QWidget(self.widget)
         self.widget_7.setObjectName("widget_7")
         self.horizontalLayout_5 = QtWidgets.QHBoxLayout(self.widget_7)
@@ -213,10 +224,12 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
+        self.Backbutton.clicked.connect(self.getback)
         self.lineEdit.textChanged.connect(self.filterTable)
         self.pushButton.clicked.connect(partial(self.showAddWidget, "Add", -1))
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         self.setUpTable()
+        self.MainWindow = MainWindow
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -224,6 +237,7 @@ class Ui_MainWindow(object):
         self.logoutButton.setText(_translate("MainWindow", "Logout"))
         self.pushButton.setText(_translate("MainWindow", "Add"))
         self.label_3.setText(_translate("MainWindow", "Search"))
+        self.Backbutton.setText(_translate("MainWindow", "Back"))
         self.tableWidget.setSortingEnabled(True)
         header = self.tableWidget.horizontalHeader()
         header.setSectionResizeMode(QtWidgets.QHeaderView.Stretch)

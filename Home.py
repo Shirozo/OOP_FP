@@ -12,9 +12,15 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from Message import Ui_MessageForm
 import signup
 from SessionManager import Session
+import LogInDialog as login
+from databaseConn import createConnection
+from PyQt5.QtSql import QSqlQuery
+from functools import partial
+import main
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
+        self.indiProdWidgets = []
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(890, 664)
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -34,6 +40,23 @@ class Ui_MainWindow(object):
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
         spacerItem = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
         self.horizontalLayout_2.addItem(spacerItem)
+        self.manageButton = QtWidgets.QPushButton(self.LogSignWidget)
+        self.manageButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+        self.manageButton.setStyleSheet("QPushButton {\n"
+        "    background-color: rgba(0,0,0,0);\n"
+        "    border:rgba(0,0,0,0);\n"
+        "}\n"
+        "QPushButton:hover {\n"
+        "    color:blue;\n"
+        "}")
+        self.manageButton.setObjectName("manageButton")
+        self.horizontalLayout_2.addWidget(self.manageButton)
+        self.Manageline = QtWidgets.QFrame(self.LogSignWidget)
+        self.Manageline.setMaximumSize(QtCore.QSize(16777215, 10))
+        self.Manageline.setFrameShape(QtWidgets.QFrame.VLine)
+        self.Manageline.setFrameShadow(QtWidgets.QFrame.Sunken)
+        self.Manageline.setObjectName("Manageline")
+        self.horizontalLayout_2.addWidget(self.Manageline)
         self.SignUpButton = QtWidgets.QPushButton(self.LogSignWidget)
         self.SignUpButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.SignUpButton.setStyleSheet("QPushButton {\n"
@@ -67,12 +90,12 @@ class Ui_MainWindow(object):
         self.LogOutButton = QtWidgets.QPushButton(self.LogSignWidget)
         self.LogOutButton.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
         self.LogOutButton.setStyleSheet("QPushButton {\n"
-            "    background-color: rgba(0,0,0,0);\n"
-            "    border:rgba(0,0,0,0);\n"
-            "}\n"
-            "QPushButton:hover {\n"
-            "    color:red;\n"
-            "}")
+        "    background-color: rgba(0,0,0,0);\n"
+        "    border:rgba(0,0,0,0);\n"
+        "}\n"
+        "QPushButton:hover {\n"
+        "    color:red;\n"
+        "}")
         self.LogOutButton.setObjectName("LogOutButton")
         self.horizontalLayout_2.addWidget(self.LogOutButton)
         self.verticalLayout.addWidget(self.Upper)
@@ -130,42 +153,6 @@ class Ui_MainWindow(object):
         self.Prods.setObjectName("Prods")
         self.gridLayout = QtWidgets.QGridLayout(self.Prods)
         self.gridLayout.setObjectName("gridLayout")
-        self.IndiProd = QtWidgets.QWidget(self.Prods)
-        self.IndiProd.setMinimumSize(QtCore.QSize(250, 250))
-        self.IndiProd.setMaximumSize(QtCore.QSize(200, 200))
-        self.IndiProd.setStyleSheet("background-color:rgb(227, 227, 227);")
-        self.IndiProd.setObjectName("IndiProd")
-        self.verticalLayout_2 = QtWidgets.QVBoxLayout(self.IndiProd)
-        self.verticalLayout_2.setObjectName("verticalLayout_2")
-        self.widget_7 = QtWidgets.QWidget(self.IndiProd)
-        self.widget_7.setMinimumSize(QtCore.QSize(238, 100))
-        self.widget_7.setStyleSheet("border: black solid 1px;\n"
-        "border-color: black;")
-        self.widget_7.setObjectName("widget_7")
-        self.verticalLayout_2.addWidget(self.widget_7, 0, QtCore.Qt.AlignHCenter)
-        self.line_3 = QtWidgets.QFrame(self.IndiProd)
-        self.line_3.setFrameShape(QtWidgets.QFrame.HLine)
-        self.line_3.setFrameShadow(QtWidgets.QFrame.Sunken)
-        self.line_3.setObjectName("line_3")
-        self.verticalLayout_2.addWidget(self.line_3)
-        self.InfoHolder = QtWidgets.QWidget(self.IndiProd)
-        self.InfoHolder.setMinimumSize(QtCore.QSize(220, 0))
-        self.InfoHolder.setMaximumSize(QtCore.QSize(2324324, 25))
-        self.InfoHolder.setObjectName("InfoHolder")
-        self.horizontalLayout_6 = QtWidgets.QHBoxLayout(self.InfoHolder)
-        self.horizontalLayout_6.setObjectName("horizontalLayout_6")
-        self.ProdName = QtWidgets.QLabel(self.InfoHolder)
-        self.ProdName.setObjectName("ProdName")
-        self.horizontalLayout_6.addWidget(self.ProdName)
-        self.ProdPrice = QtWidgets.QLabel(self.InfoHolder)
-        self.ProdPrice.setObjectName("ProdPrice")
-        self.horizontalLayout_6.addWidget(self.ProdPrice)
-        self.verticalLayout_2.addWidget(self.InfoHolder)
-        self.AddToCart = QtWidgets.QPushButton(self.IndiProd)
-        self.AddToCart.setIcon(icon)
-        self.AddToCart.setObjectName("AddToCart")
-        self.verticalLayout_2.addWidget(self.AddToCart)
-        self.gridLayout.addWidget(self.IndiProd, 0, 0, 1, 1)
         self.verticalLayout.addWidget(self.Prods)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -177,11 +164,17 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
-        self.cartButton.clicked.connect(self.showCart)
+        self.cartButton.clicked.connect(partial(self.showMessage, "Available Soon!", "Underway"))
         self.SignUpButton.clicked.connect(self.signUp)
         self.LogOutButton.clicked.connect(self.logOut)
+        self.LogInButton.clicked.connect(self.logIn)
+        self.manageButton.clicked.connect(self.manageWindow)
+        self.SearchItem.textChanged.connect(lambda: self.filterIndiProdWidgets(self.SearchItem.text()))
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         self.setButton()
+        self.fillWithData()
+        self.cartCounter()
+        self.MainWindow = MainWindow
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
@@ -190,16 +183,21 @@ class Ui_MainWindow(object):
         self.SearchItem.setPlaceholderText(_translate("MainWindow", "Search"))
         self.cartButton.setText(_translate("MainWindow", "Cart"))
         self.cartCount.setText(_translate("MainWindow", "  0"))
-        self.ProdName.setText(_translate("MainWindow", "Name"))
-        self.ProdPrice.setText(_translate("MainWindow", "Price"))
-        self.AddToCart.setText(_translate("MainWindow", "Add To Cart"))
         self.SignUpButton.setText(_translate("MainWindow", "Sign Up"))
         self.LogInButton.setText(_translate("MainWindow", "Login"))
         self.LogOutButton.setText(_translate("MainWindow", "Log Out"))
-        
-    def showCart(self) -> None:
+        self.manageButton.setText(_translate("MainWindow", "Manage"))
+    
+    def manageWindow(self) -> None:
+        self.manage_window = QtWidgets.QMainWindow()
+        manage_window = main.Ui_MainWindow()
+        manage_window.setupUi(self.manage_window)
+        self.MainWindow.close()
+        self.manage_window.show()
+    
+    def showMessage(self, msg: str, code : str) -> None:
         self.underway = QtWidgets.QDialog()
-        cart_ui = Ui_MessageForm("Available Soon!", "Underway")
+        cart_ui = Ui_MessageForm(msg, code)
         cart_ui.setupUi(self.underway)
         self.underway.exec_()
     
@@ -222,10 +220,164 @@ class Ui_MainWindow(object):
             self.LogInButton.hide()
             self.SignUpButton.hide()
             self.LogOutButton.show()
+            print(data["user_type"])
+            if data["user_type"] == 2:
+                self.manageButton.hide()
+            else:
+                self.manageButton.show()
         else:
             self.LogInButton.show()
             self.SignUpButton.show()
             self.LogOutButton.hide()
+            self.manageButton.hide()
+
+    def cartCounter(self) -> None:
+        session = Session()
+        data = session.get()
+        if data:
+            db = createConnection()
+            db.open()
+            query = QSqlQuery()
+            statement = "SELECT COUNT(*) FROM cart WHERE user_id = :user_id"
+            query.prepare(statement)
+            query.bindValue(":user_id", data["user_id"])
+            query.exec_()
+            query.next()
+            cart_count = query.value(0)
+            self.cartCount.setText(f"  {cart_count}")
+            db.close()
+
+    def filterIndiProdWidgets(self, search_text: str) -> None:
+        for widget in self.indiProdWidgets:
+            widget_name = widget.findChild(QtWidgets.QLabel, "ProdName").text().lower()
+            widget_price = widget.findChild(QtWidgets.QLabel, "ProdPrice").text().lower()
+            if search_text.lower() in widget_name or search_text.lower() in widget_price:
+                widget.show()
+            else:
+                widget.hide()
+
+    
+    def logIn(self) -> None:
+        self.log_in_ui = QtWidgets.QDialog()
+        log_in_ui = login.Ui_Dialog()
+        log_in_ui.setupUi(self.log_in_ui)
+        self.log_in_ui.exec_()
+        self.setButton()
+        self.cartCounter()
+    
+    def fillWithData(self) -> None:
+        db = createConnection()
+        db.open()
+        
+        query = QSqlQuery("SELECT * FROM user_render_with_image")
+        row = 0
+        column = 0
+        while query.next():
+            product_id = query.value(0)
+            product_name = query.value(1)
+            product_price = query.value(2)
+            product_image = query.value(3)
+
+            pixmap = self.blobToPixmap(product_image)
+            
+            indi_prod_widget = self.createIndiProdWidget(product_id, product_name, product_price, pixmap)
+            
+            self.indiProdWidgets.append(indi_prod_widget)
+
+            self.gridLayout.addWidget(indi_prod_widget, row, column, 1, 1)
+
+            if column == 6:
+                column = 0
+                row += 1
+            else:
+                column += 1
+
+        db.close()
+    def blobToPixmap(self, blob_data : hex) -> QtGui.QPixmap:
+        # Assuming blob_data is a bytes-like object containing image data
+        image = QtGui.QPixmap()
+        image.loadFromData(blob_data)
+        return image
+
+    def createIndiProdWidget(self, product_id : int ,product_name : str, product_price : str, image : hex) -> QtWidgets.QWidget:
+        indi_prod_widget = QtWidgets.QWidget(self.Prods)
+        indi_prod_widget.setMinimumSize(QtCore.QSize(250, 250))
+        indi_prod_widget.setMaximumSize(QtCore.QSize(200, 200))
+        indi_prod_widget.setStyleSheet("background-color:rgb(227, 227, 227);")
+        indi_prod_widget.setObjectName("IndiProd")
+
+        vertical_layout = QtWidgets.QVBoxLayout(indi_prod_widget)
+        vertical_layout.setObjectName("verticalLayout")
+
+        widget_7 = QtWidgets.QLabel(indi_prod_widget)
+        widget_7.setMinimumSize(QtCore.QSize(238, 100))
+        widget_7.setStyleSheet("border: black solid 1px;\n"
+                               "border-color: black;")
+
+        widget_7.setPixmap(image)
+        widget_7.setScaledContents(True)
+        widget_7.setObjectName("widget_7")
+
+        vertical_layout.addWidget(widget_7, 0, QtCore.Qt.AlignHCenter)
+
+        line_3 = QtWidgets.QFrame(indi_prod_widget)
+        line_3.setFrameShape(QtWidgets.QFrame.HLine)
+        line_3.setFrameShadow(QtWidgets.QFrame.Sunken)
+        line_3.setObjectName("line_3")
+        vertical_layout.addWidget(line_3)
+
+        info_holder = QtWidgets.QWidget(indi_prod_widget)
+        info_holder.setMinimumSize(QtCore.QSize(220, 0))
+        info_holder.setMaximumSize(QtCore.QSize(2324324, 25))
+        info_holder.setObjectName("InfoHolder")
+
+        horizontal_layout_6 = QtWidgets.QHBoxLayout(info_holder)
+        horizontal_layout_6.setObjectName("horizontalLayout_6")
+
+        prod_name_label = QtWidgets.QLabel(info_holder)
+        prod_name_label.setObjectName("ProdName")
+        prod_name_label.setText(product_name)
+        horizontal_layout_6.addWidget(prod_name_label)
+
+        prod_price_label = QtWidgets.QLabel(info_holder)
+        prod_price_label.setObjectName("ProdPrice")
+        prod_price_label.setText(str(product_price))
+        horizontal_layout_6.addWidget(prod_price_label)
+
+        vertical_layout.addWidget(info_holder)
+
+        icon = QtGui.QIcon()
+        icon.addPixmap(QtGui.QPixmap("UI\'s/../static/cart-shopping-solid.svg"), QtGui.QIcon.Normal, QtGui.QIcon.Off)
+        add_to_cart_button = QtWidgets.QPushButton(indi_prod_widget)
+        add_to_cart_button.setIcon(icon)
+        add_to_cart_button.setObjectName("AddToCart")
+        add_to_cart_button.setText("Add To Cart")
+        add_to_cart_button.clicked.connect(partial(self.addToCart, product_id))
+        vertical_layout.addWidget(add_to_cart_button)
+
+        return indi_prod_widget
+    
+    def addToCart(self, id : int) -> None:
+        session = Session()
+        user_id = session.get()
+        if not user_id:
+            self.logIn()
+        else:
+            user_id = user_id["user_id"]
+            db = createConnection()
+            query = QSqlQuery()
+            db.open()
+            statement = "INSERT INTO cart (user_id, product_id) VALUES (:user_id, :product_id)"
+            query.prepare(statement)
+            query.bindValue(":user_id", user_id)
+            query.bindValue(":product_id", id)
+            status = query.exec_()
+            if status:
+                self.cartCounter()
+                self.showMessage("Added To Cart", "Sucess")
+            else:
+                self.showMessage("Something Happened", "Error")
+            db.close()
 
 if __name__ == "__main__":
     import sys

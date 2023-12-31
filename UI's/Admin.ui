@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>787</width>
-    <height>660</height>
+    <height>722</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,6 +18,13 @@
     <item>
      <widget class="QWidget" name="widget" native="true">
       <layout class="QHBoxLayout" name="horizontalLayout">
+       <item alignment="Qt::AlignLeft">
+        <widget class="QPushButton" name="Backbutton">
+         <property name="text">
+          <string>Back</string>
+         </property>
+        </widget>
+       </item>
        <item alignment="Qt::AlignRight">
         <widget class="QWidget" name="widget_7" native="true">
          <layout class="QHBoxLayout" name="horizontalLayout_5">
