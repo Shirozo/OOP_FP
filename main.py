@@ -20,16 +20,13 @@ class Ui_MainWindow(object):
     def __init__(self) -> None:
         self.id_to_row = {}
 
-    def showAddWidget(self):
+    def showAddWidget(self, handler : str, id : int):
         self.add_form = QtWidgets.QDialog()
-        add_form_ui = Ui_Dialog()
+        add_form_ui = Ui_Dialog(handler, id)
         add_form_ui.setupUi(self.add_form)
         add_form_ui.signals.clickedOk.connect(self.setUpTable)
-        add_form_ui.FormAddButton.clicked.connect(lambda: add_form_ui.AddProduct())
+        add_form_ui.FormAddButton.clicked.connect(lambda: add_form_ui.AddProduct)
         self.add_form.exec_()
-    
-    def handleUpdater(self):
-        print("Hello world")
  
     def removeTableEntry(self, id : int) -> None:
         found = False
@@ -52,23 +49,34 @@ class Ui_MainWindow(object):
         remover_form_ui.ConfirmYesButton.clicked.connect(partial(remover_form_ui.removeEntry, id_rem))
         self.remover_form.exec_()
         
-    
     def setUpTable(self) -> None:
         self.id_to_row = {}
         db = createConnection()
         db.open()
-        query = QSqlQuery("SELECT * FROM products ORDER BY code")
+        query = QSqlQuery("SELECT * FROM render_data ORDER BY p_code")
         number_of_column = query.record().count()
         row = 0
-        while query.next():
+        while query.next(): 
             current_count = self.tableWidget.rowCount()
             if row >=  current_count:
                 self.tableWidget.insertRow(row)
             current_id = query.value(0)
             for col in range(1, number_of_column):
-                item = QtWidgets.QTableWidgetItem(str(query.value(col)))
-                item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
-                self.tableWidget.setItem(row, col-1, item)
+                if col == number_of_column - 1:
+                    image_data = query.value(col)
+
+                    image_label = QtWidgets.QLabel()
+                    pixmap = QtGui.QPixmap()
+                    pixmap.loadFromData(image_data)
+                    pixmap = pixmap.scaledToWidth(60)  # Set the desired width
+                    pixmap = pixmap.scaledToHeight(60)  # Set the desired height
+                    image_label.setPixmap(pixmap)
+                    image_label.setAlignment(QtCore.Qt.AlignCenter)
+                    self.tableWidget.setCellWidget(row, col - 1, image_label)
+                else:
+                    item = QtWidgets.QTableWidgetItem(str(query.value(col)))
+                    item.setFlags(item.flags() & ~QtCore.Qt.ItemIsEditable)
+                    self.tableWidget.setItem(row, col-1, item)
 
             self.id_to_row[current_id] = row
             
@@ -82,14 +90,21 @@ class Ui_MainWindow(object):
 
             button2 = QtWidgets.QPushButton("Update")
             button2.setMaximumSize(88, 16777215)
-            button2.clicked.connect(self.handleUpdater)
+            button2.clicked.connect(partial(self.showAddWidget, "Update", current_id))
             button_layout.addWidget(button2)
 
             self.tableWidget.setCellWidget(row, col, widget )
-            self.tableWidget.setRowHeight(row, 40)
+            self.tableWidget.setRowHeight(row, 80)
 
             row += 1
         db.close()
+    
+    def filterTable(self):
+        text = self.lineEdit.text()
+        for row in range(self.tableWidget.rowCount()):
+            self.tableWidget.setRowHidden(
+                row, not any(text.lower() in self.tableWidget.item(row, col).text().lower() for col in range(self.tableWidget.columnCount()-2))
+            )
     
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -112,9 +127,9 @@ class Ui_MainWindow(object):
         self.line_3.setFrameShadow(QtWidgets.QFrame.Sunken)
         self.line_3.setObjectName("line_3")
         self.horizontalLayout_5.addWidget(self.line_3)
-        self.label = QtWidgets.QLabel(self.widget_7)
-        self.label.setObjectName("label")
-        self.horizontalLayout_5.addWidget(self.label)
+        self.logoutButton = QtWidgets.QPushButton(self.widget_7)
+        self.logoutButton.setObjectName("label")
+        self.horizontalLayout_5.addWidget(self.logoutButton)
         self.horizontalLayout.addWidget(self.widget_7, 0, QtCore.Qt.AlignRight)
         self.verticalLayout_2.addWidget(self.widget)
         self.line_2 = QtWidgets.QFrame(self.centralwidget)
@@ -159,7 +174,7 @@ class Ui_MainWindow(object):
         self.tableWidget.setSizePolicy(sizePolicy)
         self.tableWidget.setGridStyle(QtCore.Qt.SolidLine)
         self.tableWidget.setObjectName("tableWidget")
-        self.tableWidget.setColumnCount(5)
+        self.tableWidget.setColumnCount(6)
         self.tableWidget.setRowCount(1)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget.setVerticalHeaderItem(0, item)
@@ -174,6 +189,8 @@ class Ui_MainWindow(object):
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget.setHorizontalHeaderItem(4, item)
         item = QtWidgets.QTableWidgetItem()
+        self.tableWidget.setHorizontalHeaderItem(5, item)
+        item = QtWidgets.QTableWidgetItem()
         self.tableWidget.setItem(0, 0, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget.setItem(0, 1, item)
@@ -183,6 +200,8 @@ class Ui_MainWindow(object):
         self.tableWidget.setItem(0, 3, item)
         item = QtWidgets.QTableWidgetItem()
         self.tableWidget.setItem(0, 4, item)
+        item = QtWidgets.QTableWidgetItem()
+        self.tableWidget.setItem(0, 5, item)
         self.verticalLayout_2.addWidget(self.tableWidget)
         MainWindow.setCentralWidget(self.centralwidget)
         self.menubar = QtWidgets.QMenuBar(MainWindow)
@@ -194,14 +213,15 @@ class Ui_MainWindow(object):
         MainWindow.setStatusBar(self.statusbar)
 
         self.retranslateUi(MainWindow)
-        self.pushButton.clicked.connect(self.showAddWidget) # type: ignore
+        self.lineEdit.textChanged.connect(self.filterTable)
+        self.pushButton.clicked.connect(partial(self.showAddWidget, "Add", -1))
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
         self.setUpTable()
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
-        self.label.setText(_translate("MainWindow", "asdasd"))
+        self.logoutButton.setText(_translate("MainWindow", "Logout"))
         self.pushButton.setText(_translate("MainWindow", "Add"))
         self.label_3.setText(_translate("MainWindow", "Search"))
         self.tableWidget.setSortingEnabled(True)
@@ -218,6 +238,8 @@ class Ui_MainWindow(object):
         item = self.tableWidget.horizontalHeaderItem(3)
         item.setText(_translate("MainWindow", "Price"))
         item = self.tableWidget.horizontalHeaderItem(4)
+        item.setText(_translate("MainWindow", "Image"))
+        item = self.tableWidget.horizontalHeaderItem(5)
         item.setText(_translate("MainWindow", "Action"))
         __sortingEnabled = self.tableWidget.isSortingEnabled()
         self.tableWidget.setSortingEnabled(False)

@@ -13,9 +13,15 @@ from Message import Ui_MessageForm
 from databaseConn import createConnection
 from signalConnection import SignalConnector
 from PyQt5.QtSql import QSqlQuery
-
+from PyQt5.QtWidgets import QFileDialog
+from os.path import basename
 
 class Ui_Dialog(object):
+    def __init__(self, handle : str, id : int) -> None:
+        self.handle = handle
+        self.id = id
+        self.image = None
+
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
         Dialog.resize(615, 650)
@@ -166,23 +172,52 @@ class Ui_Dialog(object):
         self.FormAddButton.clicked.connect(self.AddProduct)
         self.FormCancelButton.clicked.connect(Dialog.close)
         QtCore.QMetaObject.connectSlotsByName(Dialog)
+        self.UploadImage.clicked.connect(self.selectImage)
+        self.Dialog = Dialog
 
         self.signals = SignalConnector()
+        if self.id != -1:
+            self.loadData()
+        
 
     def retranslateUi(self, Dialog):
         _translate = QtCore.QCoreApplication.translate
         Dialog.setWindowTitle(_translate("Dialog", "Dialog"))
-        self.AddFormTitle.setText(_translate("Dialog", "Add Product"))
+        self.AddFormTitle.setText(_translate("Dialog", f"{self.handle} Product"))
         self.CodeTitle.setText(_translate("Dialog", "Code: "))
         self.NameTitle.setText(_translate("Dialog", "Name: "))
         self.descriptionLabel.setText(_translate("Dialog", "Description:"))
         self.ImageLabel.setText(_translate("Dialog", "Image:"))
         self.UploadImage.setText(_translate("Dialog", "Upload Image"))
-        self.ImageName.setText(_translate("Dialog", "TextLabel"))
         self.QuantityTitle.setText(_translate("Dialog", "Quantity: "))
         self.PriceTitle.setText(_translate("Dialog", "Price: "))
         self.FormCancelButton.setText(_translate("Dialog", "Cancel"))
-        self.FormAddButton.setText(_translate("Dialog", "Add"))
+        self.FormAddButton.setText(_translate("Dialog", self.handle))
+    
+
+    def loadData(self) -> None:
+        db = createConnection()
+        db.open()
+        query = QSqlQuery()
+        statement = "SELECT * FROM products WHERE id = :id"
+        query.prepare(statement)
+        query.bindValue(":id", self.id)
+        query.exec_()
+        query.next()
+        
+        self.CodeField.setText(query.value(1))
+        self.NameField.setText(query.value(2))
+        self.QuantityField.setValue(query.value(3))
+        self.PriceField.setValue(query.value(4))
+        if len(query.value(5)) != 0:
+            self.image = query.value(5)
+            self.ImageName.setText("Image Already Uploaded!")
+        else:
+            self.ImageName.setText("No Image Uploaded!")
+        self.textEdit.setText(query.value(6))
+
+
+        db.close()
 
     def showError(self, message : str, code : str) -> None:
         """
@@ -201,7 +236,9 @@ class Ui_Dialog(object):
         """
         self.error = QtWidgets.QDialog()            #Create a QDialog instance
         erorr_ui = Ui_MessageForm(message, code)    #Create a Ui_MessageForm object instance
-        erorr_ui.setupUi(self.error)                #Call the setupUi passing the QDialog instance to create the UI
+        erorr_ui.setupUi(self.error)
+        if self.id != -1:
+            self.Dialog.close()    #Call the setupUi passing the QDialog instance to create the UI
         self.error.exec_()  
 
     def clear_input(self) -> None:
@@ -224,10 +261,12 @@ class Ui_Dialog(object):
         """
         self.CodeField.clear()          #Clear the code field
         self.NameField.clear()          #Clear the name field
+        self.textEdit.clear()
+        self.ImageName.setText("No Image Selected")
         self.PriceField.setValue(0.0)   #Reset the value of price field to 0
         self.QuantityField.setValue(1)  #Reset the value of quantity field to 1
         self.signals.clickedOk.emit()   #This will send a signal to main.py to execute setUpTable and re-render the table data
-
+    
     def AddProduct(self):
         """
         Add a new product to the database.
@@ -244,6 +283,7 @@ class Ui_Dialog(object):
         - `name`: Product name from the 'NameField' input.
         - `price`: Product price from the 'PriceField' input (converted to float).
         - `quantity`: Product quantity from the 'QuantityField' input (converted to int).
+        - `image`: Product image from the 'uploadImage button' input (converted to BLOB).
 
         2. Validate the input:
         - Ensure that both product code and name are provided. If not, display an error message.
@@ -260,11 +300,11 @@ class Ui_Dialog(object):
         - If the query execution fails, display an error message with details.
         - If successful, close the database connection, display a success message, and clear input fields.
         """
-
         code = self.CodeField.text().strip()        #Get the value of code field removing all the whitespace
         name = self.NameField.text().strip()        #Get the value of name field removing all the whitespace
         price = float(self.PriceField.text())       #Get the value of price field
         quantity = int(self.QuantityField.text())   #Get the value of quantity field
+        description = self.textEdit.toPlainText().strip()
 
         if not code or not name:                        #If the code or name is empty, Then
             if not code:                                    #If no code, Then
@@ -272,7 +312,14 @@ class Ui_Dialog(object):
             else:                                           #If the code exist, Then
                 message = "Product Name is Required!"           #Set the message that the name is required
             message_code = "Erorr"                          #Set the message code to error
-        else:                                           #If name and code both exist, then
+        else:
+            image_data = ""
+            if self.image:
+                with open(self.file_path, 'rb') as image_file:
+                    image_data = image_file.read()          #Convert the file to binary
+
+                image_data = QtCore.QByteArray(image_data)  #Binary to ByteArray
+            
             db = createConnection()                         #Create a database connection
             if not db:                                      #If can't connect to database, then
                 message = "Database Close"                      #Set the message telling that the database is close
@@ -280,16 +327,18 @@ class Ui_Dialog(object):
             try:                                        #Handle any error
                 db.open()                                   #Open database connection
                 query = QSqlQuery()                         #Create a QSqlQuery object instance
-                statement = """INSERT INTO products (       
-                    code, name, price, quantity) 
-                    VALUES (:code, :name, :price, :quantity)
-                """                                         #Set your SQL query
+                statement = """CALL product_manage (
+                    :id, :code, :name, :price, :quantity,
+                    :image, :description)"""                                         #Set your SQL query
                 query.prepare(statement)                    #Prepare the SQL query for value binding
                 
                 query.bindValue(":code", code)              #Bind the code value to SQL statement
                 query.bindValue(":name", name)              #Bind the name value to SQL statement
                 query.bindValue(":price", price)            #Bind the price value to SQL statement
                 query.bindValue(":quantity", quantity)      #Bind the quantity value to SQL statement
+                query.bindValue(":image", image_data)
+                query.bindValue(":description", description)
+                query.bindValue(":id", self.id)
 
                 status = query.exec_()                      #Execute the query
                 if not status:                              #If the query fails, then
@@ -297,15 +346,25 @@ class Ui_Dialog(object):
                     message = f"{erorr[:14]}...."               #Set the message to the 14 character of error
                     message_code = "Error"                      #Set the code to Error 
                 else:                                       #If the query succedd, then
-                    message = "Product Added"                   #Message the user that the product is added
+                    message = f"Product {self.handle.title()}!"                   #Message the user that the product is added
                     message_code = "Success"                    #Set the message code to Success
                     self.clear_input()                          #Clear all the fields
-            except Exception as e:                      #If an error happens, then
+            except Exception as e:     
+                print(e)                 #If an error happens, then
                 message = f"{e[:14]}..."                    #Set tht message to whatever the error is                               
                 message_code = "Erorr"                      #Set the message code to error
 
-        db.close()                                   #Close the connectiom to the database
+            db.close()                                   #Close the connectiom to the database
         self.showError(message, message_code)           #Show message Dialog
+
+    def selectImage(self):
+        file_dialog = QFileDialog()
+        file_path, _ = file_dialog.getOpenFileName(None, 'Open Image File', '', 'Image Files (*.png *.jpg *.bmp *.gif)')
+
+        if file_path:
+            self.file_path = file_path
+            self.ImageName.setText(f'Selected File: {basename(file_path)}')
+
 
 
 if __name__ == "__main__":
