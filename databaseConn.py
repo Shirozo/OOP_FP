@@ -22,7 +22,7 @@ def createConnection() -> Union[QSqlDatabase, None]:
 
     db = QSqlDatabase.addDatabase("QMYSQL")     #Add database engine
     db.setHostName("127.0.0.1")                 #Set the host
-    db.setDatabaseName("OOP_finalProject")      #Set the database you want to use
+    db.setDatabaseName("YourDatabase")      #Set the database you want to use
     db.setUserName("root")                      #Set the username
-    db.setPassword("Bry01202004")               #Set the password
+    db.setPassword("YourPassword")               #Set the password
     return db                                   #Return the database
